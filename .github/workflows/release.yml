@@ -70,4 +70,8 @@ jobs:
             echo
             gh api "repos/$REPO/releases/generate-notes" -f tag_name="$TAG" --jq .body
           } > notes.md
-          gh release create "$TAG" dist/* --repo "$REPO" --title "$TAG" --notes-file notes.md
+          release_flags=()
+          if [[ "$TAG" == *-* ]]; then
+            release_flags+=(--prerelease)
+          fi
+          gh release create "$TAG" dist/* --verify-tag --repo "$REPO" --title "$TAG" --notes-file notes.md "${release_flags[@]}"

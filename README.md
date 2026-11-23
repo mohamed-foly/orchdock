@@ -7,11 +7,11 @@ scheduled tasks, and shells. Start them from one window, see what?s running or
 needs you, and reattach from your terminal. Runs keep going when you close
 OrchDock.
 
-[Install and start](#install-and-start) ? [User guide](docs/user-guide.md)
+[Download the preview](https://github.com/mohamed-foly/orchdock/releases/tag/v0.1.0-alpha.1) ? [Install and start](#install-and-start) ? [User guide](docs/user-guide.md)
 
 ![OrchDock shows a healthy preview server, a demo agent that needs attention, and a scheduled report.](assets/screenshots/orchdock-overview.png)
 
-**Status: in development.** File formats may still change.
+**Status: early preview.** File formats may still change.
 
 ## What it does
 
@@ -29,7 +29,11 @@ OrchDock runs on your machine. No accounts or telemetry.
 
 ## Install and start
 
-Build from source:
+Download an archive from [the v0.1.0-alpha.1 preview](https://github.com/mohamed-foly/orchdock/releases/tag/v0.1.0-alpha.1). On Windows, unzip
+it and double-click **`orchdockw.exe`** to open the app. Use **`orchdock.exe`**
+from a terminal.
+
+To build from source:
 
 ```sh
 go run ./tools/build -out dist     # builds orchdock and orchdockw for this OS, with a size check

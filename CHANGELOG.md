@@ -1,8 +1,10 @@
 # Changelog
 
-All notable changes are listed here. The project is not released yet.
+All notable changes are listed here.
 
 ## Unreleased
+
+## v0.1.0-alpha.1
 
 ### Added
 
