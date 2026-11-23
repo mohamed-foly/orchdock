@@ -1,0 +1,245 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="orchdock-token" content="{{TOKEN}}">
+  <meta name="color-scheme" content="light dark">
+  <title>OrchDock</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="bar">
+    <h1>OrchDock</h1>
+    <span id="summary" class="summary" aria-live="polite"></span>
+    <input id="search" type="search" placeholder="Search…   tag:  kind:  is:running  is:failed" aria-label="Search items" autocomplete="off">
+    <div id="mode" class="seg" role="radiogroup" aria-label="What to show">
+      <button type="button" role="radio" data-mode="home" title="Pinned items and your sections">Home</button>
+      <button type="button" role="radio" data-mode="all" title="Every item, grouped">All items</button>
+    </div>
+    <label class="inline" id="group-wrap">Group
+      <select id="group-by" aria-label="Group the list by">
+        <option value="tag">by tag</option>
+        <option value="kind">by kind</option>
+        <option value="none">none</option>
+      </select>
+    </label>
+    <button id="select-mode" type="button" aria-pressed="false" title="Select several items">Select</button>
+    <span class="manage-wrap">
+      <button id="manage" type="button" aria-haspopup="true" aria-expanded="false">Manage ▾</button>
+      <div id="manage-panel" class="menu manage-panel" hidden>
+        <button id="tags" type="button">Tags</button>
+        <button id="sections" type="button">Sections</button>
+        <button id="kinds" type="button">Kinds</button>
+        <button id="ports" type="button">Ports</button>
+        <button id="import" type="button" title="Add items, tags and icons from a JSON file">Import…</button>
+        <button id="export" type="button" title="Save everything as a JSON file for another machine">Export…</button>
+        <button id="trash" type="button">Trash</button>
+        <span class="hint">Ctrl+K: everything by keyboard</span>
+      </div>
+    </span>
+    <input id="import-file" type="file" accept=".json,application/json" hidden>
+    <button id="new" class="primary" type="button">+ New</button>
+    <span id="conn" class="conn" role="status" title="Live updates" aria-label="Live updates"></span>
+  </header>
+
+  <nav id="views" class="views" aria-label="Sections"></nav>
+  <main id="list" class="list" aria-label="Items"></main>
+  <div id="bulk" class="bulk" hidden role="toolbar" aria-label="Selected items">
+    <strong id="bulk-count"></strong>
+    <button type="button" data-bulk="run">▶ Run</button>
+    <button type="button" data-bulk="stop">■ Stop</button>
+    <button type="button" data-bulk="tag">+ Tag…</button>
+    <button type="button" data-bulk="untag">− Tag…</button>
+    <button type="button" data-bulk="delete" class="danger">Delete</button>
+    <button type="button" id="bulk-none">Clear</button>
+  </div>
+
+  <div id="palette" class="palette" hidden role="dialog" aria-label="Command palette">
+    <input id="palette-input" placeholder="Type an item or an action…" autocomplete="off" aria-label="Command">
+    <div id="palette-list" class="palette-list" role="listbox"></div>
+  </div>
+
+  <aside id="drawer" class="drawer" hidden aria-label="Item details">
+    <div class="drawer-head">
+      <strong id="drawer-title"></strong>
+      <button id="drawer-close" type="button" aria-label="Close details">✕</button>
+    </div>
+    <div id="drawer-body"></div>
+  </aside>
+
+  <dialog id="editor" aria-labelledby="editor-title">
+    <form id="editor-form" method="dialog">
+      <h2 id="editor-title">New item</h2>
+      <label>Kind
+        <select id="f-kind"></select>
+      </label>
+      <label>Title <input id="f-title" required autocomplete="off"></label>
+      <label>Alias <input id="f-alias" placeholder="made from the title" autocomplete="off" pattern="[a-z0-9][a-z0-9\-]{0,47}"></label>
+      <label>Tags <input id="f-tags" placeholder="e.g. shop, daily (the first tag with a folder gives the default folder and icon)" autocomplete="off"></label>
+      <div id="tag-suggest" class="tag-suggest"></div>
+      <div class="icon-field"><span>Icon</span><button type="button" id="f-icon" aria-label="Choose the icon"></button><span class="hint-text">click to change</span></div>
+      <label id="l-shell">Shell
+        <select id="f-shell">
+          <option value="auto">auto</option><option value="pwsh">pwsh</option><option value="powershell">powershell</option>
+          <option value="cmd">cmd</option><option value="bash">bash</option><option value="zsh">zsh</option>
+          <option value="sh">sh</option><option value="none">none (run the program directly)</option>
+        </select>
+      </label>
+      <label id="l-command"><span id="t-command">Command</span>
+        <textarea id="f-command" rows="3" spellcheck="false"></textarea>
+      </label>
+      <div id="l-service" class="two">
+        <label>Port <input id="f-port" type="number" min="1" max="65535" placeholder="automatic" autocomplete="off"></label>
+        <label>If it stops by itself
+          <select id="f-restart">
+            <option value="never">leave it stopped</option>
+            <option value="on-failure">restart when it fails</option>
+            <option value="always">always restart</option>
+          </select>
+        </label>
+      </div>
+      <div id="l-schedule" class="two">
+        <label>Runs by itself <input id="f-schedule" placeholder="e.g. daily 09:00 · every 2h · weekly mon,thu 09:00" autocomplete="off" spellcheck="false"></label>
+        <label>If a run is missed (computer off or asleep)
+          <select id="f-missed">
+            <option value="skip">skip it</option>
+            <option value="catchup">run once when back</option>
+          </select>
+        </label>
+      </div>
+      <p id="schedule-preview" class="hint-text"></p>
+      <label id="l-cwd">Working folder <input id="f-cwd" placeholder="default: the folder of its main tag, or your home" autocomplete="off"></label>
+      <label id="l-target">Target <input id="f-target" placeholder="a folder, file or https:// address" autocomplete="off"></label>
+      <label id="l-env">Environment (KEY=VALUE per line)
+        <textarea id="f-env" rows="3" spellcheck="false"></textarea>
+      </label>
+      <label class="check"><input id="f-pinned" type="checkbox"> Pin to Home</label>
+      <label class="check" id="l-keep"><input id="f-keep" type="checkbox"> Keep the terminal open after the command ends</label>
+      <p id="editor-error" class="error" role="alert" hidden></p>
+      <div class="buttons">
+        <button type="button" id="editor-cancel">Cancel</button>
+        <button type="submit" class="primary" id="editor-save">Save</button>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog id="icon-dialog" aria-labelledby="icon-title">
+    <form method="dialog">
+      <h2 id="icon-title">Icon</h2>
+      <div class="ip-head">
+        <span id="ip-preview" class="ip-preview"></span>
+        <div id="ip-target" class="seg" role="radiogroup" aria-label="Which part to change">
+          <button type="button" data-target="primary" role="radio">Main icon</button>
+          <button type="button" data-target="badge" role="radio">Badge</button>
+        </div>
+      </div>
+      <div id="ip-tabs" class="seg tabs" role="tablist"></div>
+      <div id="ip-panel" class="ip-panel"></div>
+      <p id="ip-error" class="error" role="alert" hidden></p>
+      <div class="buttons"><button value="cancel">Cancel</button><button value="ok" class="primary" id="ip-ok">Use</button></div>
+    </form>
+  </dialog>
+
+  <dialog id="kinds-dialog" aria-labelledby="kinds-title">
+    <form method="dialog">
+      <h2 id="kinds-title">Kinds</h2>
+      <p class="hint-text">Name the kinds of things you run. Each kind behaves like one of the five built-in kinds; built-in kinds can be renamed and recoloured but not removed.</p>
+      <div id="kinds-list" class="plist"></div>
+      <h3 class="sub">Add a kind</h3>
+      <div class="kadd">
+        <input id="k-color" type="color" value="#64748b" title="Colour" aria-label="New kind colour">
+        <input id="k-name" placeholder="name, e.g. MCP server" aria-label="New kind name" autocomplete="off">
+        <select id="k-base" aria-label="Behaves like">
+          <option value="service">behaves like a service</option>
+          <option value="task">behaves like a task</option>
+          <option value="agent">behaves like an agent</option>
+          <option value="shell">behaves like a shell</option>
+          <option value="link">behaves like a link</option>
+        </select>
+        <button type="button" id="k-add" class="primary">Add</button>
+      </div>
+      <p id="kinds-error" class="error" role="alert" hidden></p>
+      <div class="buttons"><button value="close">Close</button></div>
+    </form>
+  </dialog>
+
+  <dialog id="tags-dialog" aria-labelledby="tags-title">
+    <form method="dialog">
+      <h2 id="tags-title">Tags</h2>
+      <p class="hint-text">Tags group your items; an item can have several. A tag with a folder is suggested for new items made inside that folder, and gives its items their default working folder and icon. Search with tag:name.</p>
+      <div id="tags-list" class="plist"></div>
+      <h3 class="sub">Add a tag</h3>
+      <div class="padd">
+        <input id="t-color" type="color" value="#64748b" title="Colour" aria-label="New tag colour">
+        <input id="t-name" placeholder="name" aria-label="New tag name" autocomplete="off">
+        <input id="t-path" placeholder="folder (optional)" aria-label="New tag folder" autocomplete="off">
+        <button type="button" id="t-pick" title="Choose a folder">…</button>
+        <button type="button" id="t-add" class="primary">Add</button>
+      </div>
+      <p id="tags-error" class="error" role="alert" hidden></p>
+      <div class="buttons"><button value="close">Close</button></div>
+    </form>
+  </dialog>
+
+  <dialog id="sections-dialog" aria-labelledby="sections-title">
+    <form method="dialog">
+      <h2 id="sections-title">Sections</h2>
+      <p class="hint-text">Sections are saved searches shown on Home, in this order. An item shows in every section it matches; removing a section leaves its items alone.</p>
+      <div id="sections-list" class="plist"></div>
+      <h3 class="sub">Add a section</h3>
+      <div class="sadd">
+        <input id="s-name" placeholder="name" aria-label="New section name" autocomplete="off">
+        <input id="s-query" placeholder="search, e.g. tag:shop or kind:agent is:running" aria-label="New section search" autocomplete="off" spellcheck="false">
+        <button type="button" id="s-add" class="primary">Add</button>
+      </div>
+      <p id="sections-error" class="error" role="alert" hidden></p>
+      <div class="buttons"><button value="close">Close</button></div>
+    </form>
+  </dialog>
+
+  <dialog id="trash-dialog" aria-labelledby="trash-title">
+    <form method="dialog">
+      <h2 id="trash-title">Trash</h2>
+      <p class="hint-text">Deleted items stay here for 30 days. Restoring brings back the item with its history.</p>
+      <div id="trash-list" class="plist"></div>
+      <div class="buttons"><button type="button" id="trash-empty" class="danger">Empty the trash</button><button value="close">Close</button></div>
+    </form>
+  </dialog>
+
+  <dialog id="ports-dialog" aria-labelledby="ports-title">
+    <form method="dialog">
+      <h2 id="ports-title">Ports</h2>
+      <p class="hint-text">Each service keeps its port. A port held by another program blocks that service from starting.</p>
+      <div id="ports-list" class="report"></div>
+      <div class="buttons"><button type="button" id="ports-refresh">Refresh</button><button value="close">Close</button></div>
+    </form>
+  </dialog>
+
+  <dialog id="import-dialog" aria-labelledby="import-title">
+    <form method="dialog">
+      <h2 id="import-title">Import</h2>
+      <p id="import-summary" class="hint-text"></p>
+      <div id="import-report" class="report"></div>
+      <div class="buttons">
+        <button value="cancel">Cancel</button>
+        <button value="ok" class="primary" id="import-ok">Import</button>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog id="confirm" aria-labelledby="confirm-text">
+    <form method="dialog">
+      <p id="confirm-text"></p>
+      <div class="buttons">
+        <button value="cancel">Cancel</button>
+        <button value="ok" class="danger" id="confirm-ok">Delete</button>
+      </div>
+    </form>
+  </dialog>
+
+  <div id="menu" class="menu" role="menu" hidden></div>
+  <div id="toasts" class="toasts" aria-live="polite"></div>
+  <script type="module" src="app.js"></script>
+</body>
+</html>

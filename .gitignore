@@ -1,0 +1,98 @@
+# OrchDock .gitignore
+
+# --- Private / machine-specific (never publish) ------------------------------
+# Portable home: catalog, run logs, host tokens, agent index. Holds private
+# paths, commands and possibly secrets in env values.
+data/
+# Scratch output, local builds, research scripts.
+tmp/
+# Implementation documents: plan, decisions, research, spike notes (local only;
+# the tracked docs/ folder holds user documentation).
+notes/
+plan.md
+context.md
+# Task board (Backlog.md) and its agent instructions; local only.
+.backlog/
+/AGENTS.md
+/CLAUDE.md
+# Early throw-away spikes (local only).
+/spike/
+# Design drafts of the app icon (the shipped icon is drawn in code).
+/assets/designs/
+/*.png
+/download*.svg
+# Local list of private words for the privacy check (see tools/privacy).
+.privacy-words
+
+# --- Go ----------------------------------------------------------------------
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+/orchdock
+/orchdockw
+/odock
+/bin/
+*.test
+*.out
+coverage.*
+*.coverprofile
+*.pprof
+cpu.prof
+mem.prof
+go.work
+go.work.sum
+
+# --- Wails v3 ----------------------------------------------------------------
+/build/bin/
+*.syso
+.task/
+/web/bindings/
+/frontend/
+
+# --- Release / signing -------------------------------------------------------
+dist/
+*.pfx
+*.p12
+*.cer
+*.key
+*.pem
+*.snk
+signing/
+
+# --- Dev-only JS tooling -----------------------------------------------------
+node_modules/
+.eslintcache
+.prettiercache
+npm-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# --- Tests -------------------------------------------------------------------
+/testdata/**/out/
+/test-results/
+*.golden.actual
+
+# --- Environment & secrets ---------------------------------------------------
+.env
+.env.*
+!.env.example
+
+# --- Logs --------------------------------------------------------------------
+*.log
+logs/
+
+# --- Editors / OS ------------------------------------------------------------
+.idea/
+*.iml
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+!.vscode/launch.json
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+desktop.ini
